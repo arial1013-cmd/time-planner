@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>我的時間規劃表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calm, encouraging, student-friendly; a planner, not a scorecard
+   IDEA: the paper 時間規劃表 — one hour per row, six 10-minute boxes
+   PICTURE: the colour-painted time grid itself, tapped and dragged like a highlighter
+   COLOUR and TYPE: white page, ink #17202a, blue #2b59c3 lead, coral accent; Noto Sans TC
+   LAYOUT: one column, date header on top, three tabs fixed at the bottom thumb zone */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121820);--card:light-dark(#f3f6fb,#1b2430);--ink:light-dark(#17202a,#e8edf3);--sub:light-dark(#5b6675,#9aa6b5);--line:light-dark(#d9e0ea,#2c3847);--main:light-dark(#2b59c3,#7ea2ff);--acc:light-dark(#e5486a,#ff7d97);--ok:light-dark(#178a5b,#5fd39b)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;overflow-x:clip;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--main);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding:0 14px}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:6px;padding:10px 0}
+.top h1{flex:1;margin:0;font-size:20px;line-height:1.2;text-align:center}
+.top h1 small{display:block;font-size:13px;font-weight:400;color:var(--sub)}
+.ib{width:44px;height:44px;border-radius:12px;font-size:22px;display:grid;place-items:center;color:var(--main)}
+.ib:active{background:var(--card)}
+.today{font-size:13px;color:var(--main);padding:0 8px;height:32px;border:1px solid var(--line);border-radius:16px}
+.card{background:var(--card);border-radius:16px;padding:14px;margin:14px 0}
+.card h2{margin:0 0 8px;font-size:17px;display:flex;align-items:center;gap:8px}
+.card h2 .n{margin-left:auto;font-size:13px;font-weight:500;color:var(--sub)}
+.num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--main);color:#fff;font-size:13px}
+ul.list{list-style:none;margin:0;padding:0}
+.list li{display:flex;align-items:center;gap:8px;min-height:44px;border-bottom:1px dashed var(--line)}
+.list li:last-child{border-bottom:0}
+.chk{width:28px;height:28px;flex:none;border:2px solid var(--main);border-radius:8px;display:grid;place-items:center;color:#fff;font-size:16px}
+.chk.on{background:var(--ok);border-color:var(--ok)}
+.list .t{flex:1;overflow-wrap:anywhere}
+.list li.done .t{color:var(--sub);text-decoration:line-through}
+.del{width:36px;height:36px;color:var(--sub);font-size:18px}
+.add{display:flex;gap:8px;margin-top:8px}
+.add input,textarea,.field input{flex:1;width:100%;min-height:44px;font-size:16px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+textarea{min-height:72px;resize:vertical}
+.btn{min-height:44px;padding:0 16px;border-radius:10px;background:var(--main);color:#fff;font-weight:500;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--main);border:1px solid var(--main)}
+.btn.warn{background:var(--acc)}
+.empty{color:var(--sub);font-size:14px;padding:6px 0}
+.bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:5px;transition:width .4s}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border-radius:12px;padding:4px;margin:14px 0 8px}
+.seg button{min-height:40px;border-radius:9px;font-weight:500;color:var(--sub)}
+.seg button.on{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px #0002}
+.hint{font-size:13px;color:var(--sub);margin:4px 0 8px}
+.pal{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
+.pal button{flex:none;min-height:40px;padding:0 12px;border-radius:20px;border:2px solid transparent;background:var(--card);display:flex;align-items:center;gap:6px;font-size:15px}
+.pal button i{width:14px;height:14px;border-radius:50%}
+.pal button.on{border-color:var(--ink);font-weight:700}
+.grid{display:grid;grid-template-columns:52px repeat(6,minmax(0,1fr));gap:3px;touch-action:none;user-select:none;-webkit-user-select:none}
+.grid .hd{font-size:12px;color:var(--sub);text-align:center}
+.grid .hr{font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;white-space:nowrap}
+.cell{height:42px;border-radius:7px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;color:#fff;font-weight:700;position:relative}
+.cell.plan{background-image:repeating-linear-gradient(135deg,transparent 0 5px,var(--pc) 5px 8px);border-color:var(--pc)}
+.cell.plan.filled{background-image:none}
+.cell.sel{outline:3px solid var(--main);outline-offset:-1px;background:color-mix(in srgb,var(--main) 25%,var(--card))}
+.cell.nt{font-size:11px;letter-spacing:-.5px;overflow:hidden;white-space:nowrap;text-decoration:underline;text-underline-offset:2px}
+.pal.wrapp{flex-wrap:wrap;overflow:visible}.pal.wrapp button{max-width:100%;overflow-wrap:anywhere;text-align:left}
+.line li{align-items:flex-start;padding:8px 0;cursor:pointer}
+.line .tm{flex:none;width:6.6em;font-size:14px;font-weight:500;white-space:nowrap;padding-top:1px}
+.line li>i{flex:none;width:10px;height:10px;border-radius:50%;margin-top:8px}
+.line .t small{display:block;font-size:13px;color:var(--sub)}.line .sub{color:var(--sub)}
+.cell .pd{position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:var(--pc);border:1px solid #fff}
+.stat{display:grid;grid-template-columns:4.5em minmax(0,1fr) 4.5em;gap:8px;align-items:center;font-size:14px;margin:6px 0}
+.stat .bar{margin:0;height:14px}.stat .v{text-align:right;white-space:nowrap}
+.big{font-size:clamp(28px,8vw,40px);font-weight:700;line-height:1.05;color:var(--main)}
+.kp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;text-align:center}
+.kp div{background:var(--bg);border-radius:12px;padding:10px 4px}
+.kp b{display:block;font-size:24px;color:var(--main);line-height:1.2}.kp span{font-size:12px;color:var(--sub)}
+.mood{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.mood button{min-height:56px;border-radius:12px;background:var(--bg);border:2px solid var(--line);font-size:13px;line-height:1.2}
+.mood button b{display:block;font-size:20px}
+.mood button.on{border-color:var(--main);background:var(--main);color:#fff}
+.week{width:100%;border-collapse:collapse;font-size:14px}
+.week th,.week td{padding:8px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.week th:first-child,.week td:first-child{text-align:left}
+.week tr.cur td{font-weight:700;color:var(--main)}
+.week tbody tr{cursor:pointer}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav .wrap{display:grid;grid-template-columns:repeat(3,1fr)}
+nav button{min-height:62px;font-size:13px;color:var(--sub);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+nav button svg{width:24px;height:24px}
+nav button.on{color:var(--main);font-weight:700}
+.sheet{position:fixed;inset:0;z-index:9;background:#0007;display:none;align-items:flex-end;justify-content:center}
+.sheet.open{display:flex}
+.sheet .in{background:var(--bg);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
+.sheet h3{margin:0 0 10px;font-size:18px;display:flex;align-items:center}
+.sheet h3 button{margin-left:auto}
+.field{margin:10px 0}.field label{display:block;font-size:14px;color:var(--sub);margin-bottom:4px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:22px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}
+.toast.show{opacity:1}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap top">
+  <button class="ib" id="prev" aria-label="前一天">‹</button>
+  <h1 id="dateT">—<small id="dateS"></small></h1>
+  <button class="ib" id="next" aria-label="後一天">›</button>
+  <button class="ib" id="gear" aria-label="設定">⚙</button>
+</div></header>
+
+<main class="wrap">
+<!-- 今日 -->
+<section id="v-today">
+  <div class="card">
+    <h2><span class="num">1</span>今日作業<span class="n" id="hwN"></span></h2>
+    <div class="bar"><i id="hwBar" style="width:0"></i></div>
+    <ul class="list" id="hwL"></ul>
+    <form class="add" data-k="hw"><input placeholder="例如：數學講義 p.12–15" aria-label="新增作業"><button class="btn">加入</button></form>
+  </div>
+  <div class="card">
+    <h2><span class="num">2</span>明日考試<span class="n" id="exN"></span></h2>
+    <p class="hint">準備好了就打勾</p>
+    <ul class="list" id="exL"></ul>
+    <form class="add" data-k="ex"><input placeholder="例如：英文單字 U3" aria-label="新增考試"><button class="btn">加入</button></form>
+  </div>
+  <div class="card">
+    <h2><span class="num">3</span>今日未完成<span class="n" id="unN"></span></h2>
+    <ul class="list" id="unL"></ul>
+    <div class="field"><label for="why">沒完成的原因／卡住的地方</label><textarea id="why" placeholder="例如：數學第 3 題不會，明天問老師"></textarea></div>
+    <button class="btn ghost" id="carry" style="width:100%">把未完成的搬到明天的作業</button>
+  </div>
+</section>
+
+<!-- 時間格 -->
+<section id="v-grid" hidden>
+  <div class="seg" role="tablist"><button id="mPlan">先規劃</button><button id="mAct" class="on">記錄實際做了什麼</button></div>
+  <p class="hint" id="gHint"></p>
+  <div class="pal" id="pal"></div>
+  <div class="grid" id="grid"></div>
+  <div class="card">
+    <h2>時間軸</h2>
+    <ul class="list line" id="line"></ul>
+  </div>
+  <div class="card">
+    <h2>今天的時間花在哪<span class="n" id="totN"></span></h2>
+    <div id="stats"></div>
+    <p class="hint" id="match"></p>
+  </div>
+</section>
+
+<!-- 回顧 -->
+<section id="v-rev" hidden>
+  <div class="card">
+    <div class="kp">
+      <div><b id="kStreak">0</b><span>連續記錄天數</span></div>
+      <div><b id="kHw">–</b><span>今日作業完成</span></div>
+      <div><b id="kMin">0</b><span>今日記錄分鐘</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>今天我掌握自己的時間嗎？</h2>
+    <div class="mood" id="mood"></div>
+  </div>
+  <div class="card">
+    <div class="field"><label for="win">今天我做到了……</label><textarea id="win" placeholder="哪怕很小也算，例如：回家先寫完英文才滑手機"></textarea></div>
+    <div class="field"><label for="nxt">明天我想試試……</label><textarea id="nxt" placeholder="例如：手機先放客廳 30 分鐘"></textarea></div>
+  </div>
+  <div class="card">
+    <h2>這 7 天</h2>
+    <table class="week"><thead><tr><th>日期</th><th>作業</th><th>記錄</th><th>掌握感</th></tr></thead><tbody id="week"></tbody></table>
+    <p class="hint">點一列可以跳到那天</p>
+  </div>
+  <button class="btn" id="share" style="width:100%;margin-bottom:14px">複製今日摘要給老師</button>
+</section>
+</main>
+
+<nav><div class="wrap">
+  <button data-v="today" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>今日清單</button>
+  <button data-v="grid"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>時間格</button>
+  <button data-v="rev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>回顧</button>
+</div></nav>
+
+<div class="sheet" id="sheet"><div class="in">
+  <h3 id="shT">設定<button class="ib" id="shX" aria-label="關閉">✕</button></h3>
+  <div id="shBody"></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+{
+/* ===== 資料設定（老師可修改） ===== */
+const CATS=[
+  {id:'hw',name:'寫作業',s:'作',c:'#3b6fe0'},
+  {id:'study',name:'讀書複習',s:'讀',c:'#7c4ddb'},
+  {id:'class',name:'補習上課',s:'補',c:'#0b9ab5'},
+  {id:'meal',name:'吃飯',s:'吃',c:'#e8930c'},
+  {id:'bath',name:'洗澡盥洗',s:'洗',c:'#18a88a'},
+  {id:'rest',name:'休息運動',s:'休',c:'#6da514'},
+  {id:'phone',name:'手機娛樂',s:'手',c:'#e5486a'},
+  {id:'move',name:'通勤',s:'通',c:'#7d8799'},
+  {id:'sleep',name:'睡覺',s:'睡',c:'#3f4a5c'},
+  {id:'other',name:'其他',s:'他',c:'#a87b52'}
+];
+const MOODS=[['1','沒有'],['2','一點點'],['3','普通'],['4','大致有'],['5','完全有']];
+const KEY='timePlanner.v1';
+const DEF={name:'',start:16,end:24,days:{}};
+
+/* ===== 狀態與儲存 ===== */
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))||null}catch(e){S=null}
+if(!S||typeof S!=='object')S=structuredClone(DEF);
+S.days=S.days||{};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const shift=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return ymd(d)};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const W='日一二三四五六';
+let cur=ymd(new Date()), view='today', mode='act', brush='hw';
+const day=(k=cur)=>{const d=S.days[k]||(S.days[k]={});d.hw=d.hw||[];d.ex=d.ex||[];d.plan=d.plan||{};d.act=d.act||{};return d};
+const hasData=k=>{const d=S.days[k];return !!d&&(d.hw?.length||d.ex?.length||Object.keys(d.act||{}).length||d.mood||d.win)};
+const $=id=>document.getElementById(id);
+const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),1800)};
+const catOf=id=>CATS.find(c=>c.id===id);
+const hours=()=>{const a=[];for(let h=S.start;h<=S.end;h++)a.push(h);return a};
+const hl=h=>pad(h%24)+':00';
+
+/* ===== 表頭 ===== */
+function head(){
+  const d=parse(cur),t=ymd(new Date());
+  $('dateT').firstChild.nodeValue=(d.getMonth()+1)+'月'+d.getDate()+'日（'+W[d.getDay()]+'）';
+  $('dateS').textContent=(S.name?S.name+'・':'')+(cur===t?'今天':cur<t?'過去的紀錄':'預先規劃');
+}
+
+/* ===== 今日清單 ===== */
+function itemHTML(it,k){return `<li class="${it.done?'done':''}" data-k="${k}" data-id="${esc(it.id)}"><button class="chk ${it.done?'on':''}" data-a="tog" aria-label="完成">${it.done?'✓':''}</button><span class="t">${esc(it.t)}</span><button class="del" data-a="del" aria-label="刪除">✕</button></li>`}
+function renderToday(){
+  const d=day(),done=d.hw.filter(x=>x.done).length;
+  $('hwL').innerHTML=d.hw.length?d.hw.map(x=>itemHTML(x,'hw')).join(''):'<li class="empty">還沒有作業，從下面加入第一項</li>';
+  $('hwN').textContent=d.hw.length?`完成 ${done}/${d.hw.length}`:'';
+  $('hwBar').style.width=(d.hw.length?done/d.hw.length*100:0)+'%';
+  $('exL').innerHTML=d.ex.length?d.ex.map(x=>itemHTML(x,'ex')).join(''):'<li class="empty">明天沒有考試</li>';
+  const er=d.ex.filter(x=>x.done).length;$('exN').textContent=d.ex.length?`準備好 ${er}/${d.ex.length}`:'';
+  const un=d.hw.filter(x=>!x.done);
+  $('unL').innerHTML=un.length?un.map(x=>`<li><span class="t">${esc(x.t)}</span></li>`).join(''):`<li class="empty">${d.hw.length?'全部完成，太棒了！':'作業沒打勾的會自動出現在這裡'}</li>`;
+  $('unN').textContent=un.length?un.length+' 項':'';
+  $('carry').hidden=!un.length;
+  $('why').value=d.why||'';
+}
+document.querySelectorAll('form.add').forEach(f=>f.addEventListener('submit',e=>{
+  e.preventDefault();const i=f.querySelector('input'),t=i.value.trim();if(!t)return;
+  day()[f.dataset.k].push({id:uid(),t,done:false});i.value='';save();renderToday();i.focus();
+}));
+$('v-today').addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');if(!b)return;const li=b.closest('li'),arr=day()[li.dataset.k],i=arr.findIndex(x=>x.id===li.dataset.id);if(i<0)return;
+  if(b.dataset.a==='tog'){arr[i].done=!arr[i].done;if(arr[i].done&&li.dataset.k==='hw'&&arr.every(x=>x.done))toast('今天的作業全部完成！')}
+  else arr.splice(i,1);
+  save();renderToday();
+});
+$('why').addEventListener('input',e=>{day().why=e.target.value;save()});
+$('carry').addEventListener('click',()=>{
+  const un=day().hw.filter(x=>!x.done),nx=day(shift(cur,1));let n=0;
+  un.forEach(x=>{if(!nx.hw.some(y=>y.t===x.t)){nx.hw.push({id:uid(),t:x.t,done:false});n++}});
+  save();toast(n?`已把 ${n} 項放到明天`:'明天已經有這些作業了');
+});
+
+/* ===== 時間格 ===== */
+const NOTE='__note';
+const notes=(d=day())=>{d.planN=d.planN||{};d.actN=d.actN||{};return d[mode+'N']};
+const kOrd=k=>{const[h,i]=k.split('-').map(Number);return h*6+i};
+const kTime=(k,add=0)=>{const n=kOrd(k)+add;return pad(Math.floor(n/6)%24)+':'+pad(n%6*10)};
+function renderPal(){
+  $('pal').innerHTML=`<button data-c="${NOTE}" class="${brush===NOTE?'on':''}" style="background:var(--main);color:#fff">✎ 寫下做了什麼</button>`+CATS.map(c=>`<button data-c="${c.id}" class="${brush===c.id?'on':''}"><i style="background:${c.c}"></i>${c.name}</button>`).join('')+`<button data-c="" class="${brush===''?'on':''}"><i style="background:transparent;border:2px solid currentColor"></i>橡皮擦</button>`;
+}
+$('pal').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;brush=b.dataset.c;renderPal();renderHint()});
+function renderHint(){
+  $('gHint').textContent=brush===NOTE?'用手指滑過一段格子（或點一格），放開後輸入這段時間做了什麼。':mode==='plan'?'先選顏色，再點或滑過格子，排好今晚想怎麼用時間。':'選一個顏色，點或滑過格子，記下每 10 分鐘在做什麼。想寫清楚內容，就用「✎ 寫下做了什麼」。斜線是原本的規劃。';
+}
+function cellHTML(k,L,N,P){
+  const c=catOf(L[k]),p=P?catOf(P[k]):null,n=N[k];
+  const st=(c?`background:${c.c};border-color:${c.c};`:'')+(p?`--pc:${p.c};`:'');
+  return `<div class="cell${p?' plan':''}${c?' filled':''}${n?' nt':''}" data-k="${k}" style="${st}">${c?esc(n?n.slice(0,2):c.s):''}${p&&c?'<span class="pd"></span>':''}</div>`;
+}
+function renderGrid(){
+  const d=day(),L=d[mode],N=notes(d),P=mode==='act'?d.plan:null;
+  $('mPlan').classList.toggle('on',mode==='plan');$('mAct').classList.toggle('on',mode==='act');
+  renderHint();
+  let h='<div></div>'+[10,20,30,40,50,60].map(m=>`<div class="hd">${m}</div>`).join('');
+  hours().forEach(hr=>{h+=`<div class="hr">${hl(hr)}</div>`;for(let i=0;i<6;i++)h+=cellHTML(hr+'-'+i,L,N,P)});
+  $('grid').innerHTML=h;renderStats();renderLine();
+}
+function segments(){
+  const d=day(),L=d[mode],N=notes(d),out=[];let s=null;
+  hours().forEach(hr=>{for(let i=0;i<6;i++){const k=hr+'-'+i,c=L[k],n=N[k]||'';
+    if(c&&s&&s.c===c&&s.n===n){s.keys.push(k)}else{s=c?{c,n,keys:[k]}:null;if(s)out.push(s)}}});
+  return out;
+}
+function renderLine(){
+  const seg=segments();
+  $('line').innerHTML=seg.length?seg.map((s,j)=>{const c=catOf(s.c);return `<li data-j="${j}"><span class="tm">${kTime(s.keys[0])}–${kTime(s.keys[s.keys.length-1],1)}</span><i style="background:${c.c}"></i><span class="t">${s.n?esc(s.n):`<span class="sub">${c.name}</span>`}${s.n?`<small>${c.name}・${s.keys.length*10} 分</small>`:`<small>${s.keys.length*10} 分・點我補上內容</small>`}</span></li>`}).join(''):'<li class="empty">塗了格子之後，這裡會依時間排出你做了哪些事</li>';
+}
+$('line').addEventListener('click',e=>{const li=e.target.closest('li[data-j]');if(!li)return;noteSheet(segments()[+li.dataset.j].keys)});
+function noteSheet(keys){
+  keys=[...new Set(keys)].sort((a,b)=>kOrd(a)-kOrd(b));if(!keys.length)return;
+  const d=day(),L=d[mode],N=notes(d);
+  let cat=L[keys[0]]||'hw';const txt=N[keys[0]]||'';
+  const quick=[...d.hw,...d.ex].map(x=>x.t).filter((t,i,a)=>a.indexOf(t)===i);
+  openSheet(`${kTime(keys[0])}–${kTime(keys[keys.length-1],1)}${mode==='plan'?' 打算做什麼？':' 做了什麼？'}`,`
+  <div class="field"><input id="nT" value="${esc(txt)}" placeholder="例如：數學講義 p.12、背英文單字、陪妹妹寫功課" maxlength="40"></div>
+  ${quick.length?`<p class="hint">今天的作業／考試，點一下帶入：</p><div class="pal wrapp" id="nQ">${quick.map(t=>`<button data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>`:''}
+  <p class="hint">屬於哪一類（決定顏色）：</p>
+  <div class="pal wrapp" id="nC">${CATS.map(c=>`<button data-c="${c.id}" class="${cat===c.id?'on':''}"><i style="background:${c.c}"></i>${c.name}</button>`).join('')}</div>
+  <div class="row" style="margin-top:8px"><button class="btn" id="nOk" style="flex:1">儲存</button><button class="btn ghost" id="nDel">清除這段</button></div>`);
+  const t=$('nT');setTimeout(()=>t.focus(),50);
+  $('nQ')?.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;t.value=b.dataset.t;
+    if(d.hw.some(x=>x.t===b.dataset.t)){cat='hw'}else if(d.ex.some(x=>x.t===b.dataset.t)){cat='study'}
+    $('nC').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.c===cat))});
+  $('nC').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;cat=b.dataset.c;$('nC').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
+  const ok=()=>{const v=t.value.trim();keys.forEach(k=>{L[k]=cat;if(v)N[k]=v;else delete N[k]});save();closeSheet();renderGrid()};
+  $('nOk').onclick=ok;t.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ok()}});
+  $('nDel').onclick=()=>{keys.forEach(k=>{delete L[k];delete N[k]});save();closeSheet();renderGrid()};
+}
+function renderStats(){
+  const d=day(),L=d[mode],cnt={};let tot=0;
+  Object.values(L).forEach(v=>{if(catOf(v)){cnt[v]=(cnt[v]||0)+10;tot+=10}});
+  const max=Math.max(10,...Object.values(cnt));
+  $('totN').textContent=tot?`${mode==='plan'?'規劃':'記錄'}了 ${Math.floor(tot/60)} 小時 ${tot%60} 分`:'';
+  $('stats').innerHTML=tot?CATS.filter(c=>cnt[c.id]).sort((a,b)=>cnt[b.id]-cnt[a.id]).map(c=>`<div class="stat"><span>${c.name}</span><div class="bar"><i style="width:${cnt[c.id]/max*100}%;background:${c.c}"></i></div><span class="v">${cnt[c.id]} 分</span></div>`).join(''):'<p class="empty">還沒有塗任何格子</p>';
+  const pk=Object.keys(d.plan).filter(k=>d.plan[k]);
+  if(mode==='act'&&pk.length){const m=pk.filter(k=>d.act[k]===d.plan[k]).length;$('match').textContent=`照規劃執行：${Math.round(m/pk.length*100)}%（${m*10} / ${pk.length*10} 分鐘）`}
+  else $('match').textContent='';
+}
+$('mPlan').onclick=()=>{mode='plan';renderGrid()};$('mAct').onclick=()=>{mode='act';renderGrid()};
+let painting=null,sel=[];
+function paintCell(el){
+  if(!el||!el.classList.contains('cell'))return;const k=el.dataset.k;
+  if(painting==='select'){if(!sel.length)sel=[k,k];sel[1]=k;const a=Math.min(kOrd(sel[0]),kOrd(k)),b=Math.max(kOrd(sel[0]),kOrd(k));
+    g.querySelectorAll('.cell').forEach(c=>{const o=kOrd(c.dataset.k);c.classList.toggle('sel',o>=a&&o<=b)});return}
+  const d=day(),L=d[mode],N=notes(d);
+  if(painting==='erase'||!brush){delete L[k];delete N[k]}else L[k]=brush;
+  el.outerHTML=cellHTML(k,L,N,mode==='act'?d.plan:null);
+}
+const g=$('grid');
+g.addEventListener('pointerdown',e=>{
+  const el=e.target.closest('.cell');if(!el)return;e.preventDefault();
+  if(brush===NOTE){painting='select';sel=[]}else{const L=day()[mode];painting=(brush&&L[el.dataset.k]===brush)?'erase':'paint'}
+  paintCell(el);
+});
+g.addEventListener('pointermove',e=>{if(!painting)return;paintCell(document.elementFromPoint(e.clientX,e.clientY)?.closest('.cell'))});
+const end=()=>{if(!painting)return;const was=painting;painting=null;
+  if(was==='select'){noteSheet([...g.querySelectorAll('.cell.sel')].map(c=>c.dataset.k));sel=[];g.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));return}
+  save();renderGrid()};
+window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);
+
+/* ===== 回顧 ===== */
+const recMin=k=>Object.values(S.days[k]?.act||{}).filter(v=>catOf(v)).length*10;
+function streak(){let k=ymd(new Date()),n=0;if(!hasData(k))k=shift(k,-1);while(hasData(k)){n++;k=shift(k,-1)}return n}
+function renderRev(){
+  const d=day();
+  $('kStreak').textContent=streak();
+  $('kHw').textContent=d.hw.length?Math.round(d.hw.filter(x=>x.done).length/d.hw.length*100)+'%':'–';
+  $('kMin').textContent=recMin(cur);
+  $('mood').innerHTML=MOODS.map(([v,t])=>`<button data-m="${v}" class="${String(d.mood)===v?'on':''}"><b>${v}</b>${t}</button>`).join('');
+  $('win').value=d.win||'';$('nxt').value=d.nxt||'';
+  let rows='';for(let i=6;i>=0;i--){const k=shift(cur,-i),x=S.days[k],dt=parse(k);
+    const hw=x?.hw?.length?`${x.hw.filter(y=>y.done).length}/${x.hw.length}`:'–';
+    rows+=`<tr data-d="${k}" class="${k===cur?'cur':''}"><td>${dt.getMonth()+1}/${dt.getDate()}（${W[dt.getDay()]}）</td><td>${hw}</td><td>${recMin(k)?recMin(k)+' 分':'–'}</td><td>${x?.mood||'–'}</td></tr>`}
+  $('week').innerHTML=rows;
+}
+$('mood').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=day();d.mood=d.mood==b.dataset.m?0:+b.dataset.m;save();renderRev()});
+$('win').addEventListener('input',e=>{day().win=e.target.value;save()});
+$('nxt').addEventListener('input',e=>{day().nxt=e.target.value;save()});
+$('week').addEventListener('click',e=>{const r=e.target.closest('tr');if(r){cur=r.dataset.d;render()}});
+function summary(){
+  const d=day(),dt=parse(cur),cnt={};Object.values(d.act).forEach(v=>{if(catOf(v))cnt[v]=(cnt[v]||0)+10});
+  const L=[`【${S.name||'時間規劃表'}】${dt.getMonth()+1}/${dt.getDate()}（${W[dt.getDay()]}）`];
+  L.push(`作業：${d.hw.length?d.hw.filter(x=>x.done).length+'/'+d.hw.length+' 完成':'無'}`);
+  d.hw.forEach(x=>L.push(`  ${x.done?'✓':'✗'} ${x.t}`));
+  if(d.ex.length)L.push('明日考試：'+d.ex.map(x=>x.t+(x.done?'（已準備）':'')).join('、'));
+  if(d.why)L.push('未完成原因：'+d.why);
+  const sv=mode;mode='act';const sg=segments();mode=sv;if(sg.length){L.push('時間軸：');sg.forEach(x=>L.push(`  ${kTime(x.keys[0])}–${kTime(x.keys[x.keys.length-1],1)} ${x.n||catOf(x.c).name}`))}
+  const c=CATS.filter(x=>cnt[x.id]).map(x=>`${x.name} ${cnt[x.id]}分`);if(c.length)L.push('時間：'+c.join('、'));
+  if(d.mood)L.push(`掌握感：${d.mood}/5`);if(d.win)L.push('我做到了：'+d.win);if(d.nxt)L.push('明天想試：'+d.nxt);
+  return L.join('\n');
+}
+function copyOut(text,title){
+  const done=()=>toast('已複製，可以貼到 LINE 或 Classroom');
+  const show=()=>openSheet(title,`<p class="hint">自動複製沒成功，請長按下方文字全選後複製。</p><textarea readonly style="min-height:220px">${esc(text)}</textarea>`);
+  try{navigator.clipboard.writeText(text).then(done,show)}catch(e){show()}
+}
+$('share').addEventListener('click',()=>copyOut(summary(),'今日摘要'));
+
+/* ===== 設定面板 ===== */
+function openSheet(t,html){$('shT').firstChild.nodeValue=t;$('shBody').innerHTML=html;$('sheet').classList.add('open')}
+const closeSheet=()=>$('sheet').classList.remove('open');
+$('shX').onclick=closeSheet;$('sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
+const opts=(a,b,v)=>{let s='';for(let h=a;h<=b;h++)s+=`<option value="${h}"${h===v?' selected':''}>${hl(h)}</option>`;return s};
+$('gear').onclick=()=>{
+  openSheet('設定',`
+  <div class="field"><label for="sName">我的名字（會顯示在摘要上）</label><input id="sName" value="${esc(S.name)}" placeholder="例如：王小明"></div>
+  <div class="row"><div class="field" style="flex:1"><label for="sS">時間格從</label><select id="sS" class="btn ghost" style="width:100%">${opts(5,22,S.start)}</select></div>
+  <div class="field" style="flex:1"><label for="sE">到</label><select id="sE" class="btn ghost" style="width:100%">${opts(8,26,S.end)}</select></div></div>
+  <p class="hint">預設 16:00–00:00，和紙本一樣。假日可以改成從早上開始。</p>
+  <div class="field"><label>備份與換手機</label><div class="row"><button class="btn ghost" id="bk">複製備份碼</button><button class="btn ghost" id="rs">貼上備份碼還原</button></div></div>
+  <p class="hint">資料只存在這支手機的這個瀏覽器裡。換手機或清除瀏覽器前，記得先複製備份碼。</p>
+  <div class="field"><button class="btn warn" id="clr">清除全部紀錄</button></div>`);
+  $('sName').oninput=e=>{S.name=e.target.value.trim();save();head()};
+  const hs=()=>{let a=+$('sS').value,b=+$('sE').value;if(b<a)b=a;S.start=a;S.end=b;save();renderGrid()};
+  $('sS').onchange=hs;$('sE').onchange=hs;
+  $('bk').onclick=()=>copyOut(JSON.stringify(S),'備份碼');
+  $('rs').onclick=()=>{openSheet('還原備份',`<textarea id="rsT" style="min-height:160px" placeholder="把備份碼貼在這裡"></textarea><div class="row" style="margin-top:10px"><button class="btn" id="rsGo">還原</button></div>`);
+    $('rsGo').onclick=()=>{try{const o=JSON.parse($('rsT').value);if(!o||typeof o.days!=='object')throw 0;S=Object.assign(structuredClone(DEF),o);save();closeSheet();render();toast('還原完成')}catch(e){toast('備份碼格式不對，請重新複製')}}};
+  $('clr').onclick=e=>{if(e.target.dataset.sure){S=structuredClone(DEF);save();closeSheet();render();toast('已清除')}else{e.target.dataset.sure=1;e.target.textContent='再按一次確認清除'}};
+};
+
+/* ===== 導覽 ===== */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render();scrollTo(0,0)});
+$('prev').onclick=()=>{cur=shift(cur,-1);render()};$('next').onclick=()=>{cur=shift(cur,1);render()};
+function render(){
+  head();
+  ['today','grid','rev'].forEach(v=>$('v-'+v).hidden=v!==view);
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+  if(view==='today')renderToday();if(view==='grid'){renderPal();renderGrid()}if(view==='rev')renderRev();
+}
+render();
+}
+</script>
+</body>
+</html>
